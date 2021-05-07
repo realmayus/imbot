@@ -36,7 +36,6 @@ if not os.path.isfile("assets/templates/index.json"):
 cp = ConfigParser()
 cp.read("config.ini")
 token = cp["secret"]["token"]
-moderators = cp["settings"]["moderators"].split(",")
 
 template_manager = TemplateManager()
 

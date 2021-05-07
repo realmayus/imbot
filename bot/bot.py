@@ -2,6 +2,7 @@ import base64
 import io
 import json
 import time
+from configparser import ConfigParser
 
 import discord
 from PIL import Image
@@ -17,6 +18,10 @@ from util import random_string_generator, send_moderator_info, delete_template, 
 
 class BotMain(commands.Cog):
     def __init__(self, bot, template_manager):
+        cp = ConfigParser()
+        cp.read("config.ini")
+        self.moderators = [int(x) for x in cp["settings"]["moderators"].split(",")]
+
         self.bot: commands.Bot = bot
         self.template_manager: TemplateManager = template_manager
 
@@ -32,7 +37,6 @@ class BotMain(commands.Cog):
         await ctx.send("✅ Done!")
 
     async def add_template(self, ctx: Context, name: str):
-        from main import moderators
 
         if len(ctx.message.attachments) != 1:
             await ctx.send("❌ Please attach exactly one template file.")
@@ -87,7 +91,7 @@ class BotMain(commands.Cog):
             c.write(json.dumps(json_, indent=2))
 
         b.seek(0)
-        await send_moderator_info(moderators, self.bot, ctx.author, b, ext, self.template_manager.parse_template(json_templ))
+        await send_moderator_info(self.moderators, self.bot, ctx.author, b, ext, self.template_manager.parse_template(json_templ))
         await ctx.send("✅  Thanks for your submission. A moderator will review it and we'll notify you.")
 
     async def cleanup(self, ctx: Context):
@@ -201,7 +205,6 @@ class BotMain(commands.Cog):
     @commands.command(aliases=["temp", "t", "tl"])
     async def template(self, ctx, mode=None, *args):
         """Unified command that lets you add, accept, decline, reload, cleanup, list and rename templates."""
-        from main import moderators
 
         if mode not in ["add", "list", "accept", "decline", "delete", "remove", "reload", "cleanup", "search", "rename"]:
             await ctx.send("❌ This subcommand doesn't exist. See the help for all subcommands.")
@@ -217,7 +220,7 @@ class BotMain(commands.Cog):
         elif mode == "search":
             self.template_manager.search_template(args[0])
         else:
-            if ctx.author.id not in moderators:
+            if ctx.author.id not in self.moderators:
                 await ctx.send("❌ You don't have permission to execute this command.")
                 return
             if mode == "accept":
