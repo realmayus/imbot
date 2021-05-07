@@ -9,7 +9,6 @@ from PIL import Image
 from discord import Attachment
 from discord.ext import commands
 from discord.ext.commands import Context
-from discord_slash import SlashContext
 
 from image import manipulator
 from image.template import TemplateManager
@@ -29,7 +28,7 @@ class BotMain(commands.Cog):
     async def on_ready(self):
         print(f"✅ Logged in as {self.bot.user}")
 
-    async def list_templates(self, ctx: SlashContext):
+    async def list_templates(self, ctx: Context):
         await ctx.send(embed=discord.Embed(title=f"{len(self.template_manager.templates)} templates loaded", description="\n".join([f"• {t.name}" for t in self.template_manager.templates])))
 
     async def reload_templates(self, ctx: Context):
