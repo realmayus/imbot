@@ -39,21 +39,23 @@ class BotMain(commands.Cog):
 
         if len(ctx.message.attachments) != 1:
             await ctx.send("❌ Please attach exactly one template file.")
-        if "application/json" not in ctx.message.attachments[0].content_type:
-            await ctx.send("❌ The attached file has to have the .json extension!")
 
         if not is_ascii(name):
             await ctx.send("❌ The name cannot contain non-ASCII characters.")
             return
 
-        att: Attachment = ctx.message.attachments[0]
-        f = await att.read()
-        decoded = f.decode("utf8")
-        json_templ = json.loads(decoded)
-        image_b64: str = json_templ["image"]
-        b = io.BytesIO()
-        b.write(base64.b64decode(image_b64))
-        b.seek(0)
+        try:
+            att: Attachment = ctx.message.attachments[0]
+            f = await att.read()
+            decoded = f.decode("utf8")
+            json_templ = json.loads(decoded)
+            image_b64: str = json_templ["image"]
+            b = io.BytesIO()
+            b.write(base64.b64decode(image_b64))
+            b.seek(0)
+        except Exception:
+            await ctx.send("❌ Not able to read template file.")
+            return
 
         if json_templ["imageMIME"] == "image/jpeg":
             ext = ".jpg"
