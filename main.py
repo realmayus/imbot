@@ -2,7 +2,6 @@ import os.path
 from configparser import ConfigParser
 import discord
 from discord.ext.commands import Bot
-from discord_slash import SlashCommand
 from bot.bot import BotMain
 from image.template import TemplateManager
 
@@ -43,7 +42,6 @@ template_manager.load_templates()
 
 print("⏳ Logging in…")
 bot = Bot(command_prefix=".", intents=discord.Intents.all())
-slash = SlashCommand(bot, override_type=True, sync_commands=True)
 
 bot.add_cog(BotMain(bot, template_manager))
 bot.run(token)
