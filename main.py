@@ -7,15 +7,13 @@ from bot.bot import BotMain
 from image.template import TemplateManager
 
 dev = os.path.isfile("./dev")
-template_manager = TemplateManager()
 
-template_manager.load_templates()
-
-if not os.path.isfile("secret.ini"):
-    with open("secret.ini", "w") as f:
-        f.write("[secret]\ntoken = ")
-    print("➡️  Please enter your discord token in token.ini (it was just created)")
+if not os.path.isfile("config.ini"):
+    with open("config.ini", "w") as f:
+        f.write("[secret]\ntoken = \n\n[settings]\nmoderators = ")
+    print("➡️  Please enter your discord token and user id in config.ini (it was just created)")
     exit(1)
+
 
 if not os.path.isdir("assets"):
     os.mkdir("assets")
@@ -36,8 +34,13 @@ if not os.path.isfile("assets/templates/index.json"):
 
 
 cp = ConfigParser()
-cp.read("secret.ini")
+cp.read("config.ini")
 token = cp["secret"]["token"]
+moderators = cp["settings"]["moderators"].split(",")
+
+template_manager = TemplateManager()
+
+template_manager.load_templates()
 
 print("⏳ Logging in…")
 bot = Bot(command_prefix=".", intents=discord.Intents.all())

@@ -1,22 +1,18 @@
 import base64
 import io
 import json
-import os
 import time
 
 import discord
-import discord_slash
 from PIL import Image
-from discord import Attachment, User
+from discord import Attachment
 from discord.ext import commands
 from discord.ext.commands import Context
-from discord_slash import cog_ext, SlashContext
+from discord_slash import SlashContext
 
 from image import manipulator
 from image.template import TemplateManager
 from util import random_string_generator, send_moderator_info, delete_template, remove_templates_from_index, is_ascii
-
-moderators = [218444620051251200]
 
 
 class BotMain(commands.Cog):
@@ -36,6 +32,8 @@ class BotMain(commands.Cog):
         await ctx.send("✅ Done!")
 
     async def add_template(self, ctx: Context, name: str):
+        from main import moderators
+
         if len(ctx.message.attachments) != 1:
             await ctx.send("❌ Please attach exactly one template file.")
         if "application/json" not in ctx.message.attachments[0].content_type:
@@ -203,6 +201,7 @@ class BotMain(commands.Cog):
     @commands.command(aliases=["temp", "t", "tl"])
     async def template(self, ctx, mode=None, *args):
         """Unified command that lets you add, accept, decline, reload, cleanup, list and rename templates."""
+        from main import moderators
 
         if mode not in ["add", "list", "accept", "decline", "delete", "remove", "reload", "cleanup", "search", "rename"]:
             await ctx.send("❌ This subcommand doesn't exist. See the help for all subcommands.")
