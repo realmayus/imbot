@@ -1,0 +1,5 @@
+# Project exclude paths
+/venv/
+secret.ini
+assets/
+.idea/
