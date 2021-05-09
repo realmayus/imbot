@@ -10,6 +10,7 @@ from discord import Attachment
 from discord.ext import commands
 from discord.ext.commands import Context
 
+from bot.PagedListEmbed import PagedListEmbed
 from image import manipulator
 from image.manipulator import draw_field_outlines
 from image.template import TemplateManager
@@ -63,7 +64,8 @@ class BotMain(commands.Cog):
         await self.intro(ctx)
 
     async def list_templates(self, ctx: Context):
-        await ctx.send(embed=discord.Embed(title=f"{len(self.template_manager.templates)} templates loaded", description="\n".join([f"• {t.name}" for t in self.template_manager.templates])))
+        paged_list = PagedListEmbed(f"{len(self.template_manager.templates)} templates loaded", [f"• {t.name}" for t in self.template_manager.templates], ctx, self.bot)
+        await paged_list.send(paged_list.get())
 
     async def reload_templates(self, ctx: Context):
         self.template_manager.load_templates()
