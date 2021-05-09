@@ -19,6 +19,8 @@ class TextField:
     color: str
     font_size: float
     bold: bool
+    outlinePercentage: int
+    outlineColor: str
 
 
 @dataclasses.dataclass

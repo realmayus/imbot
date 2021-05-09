@@ -4,14 +4,16 @@ import json
 import time
 from configparser import ConfigParser
 
-import discord
 from PIL import Image
+import discord
 from discord import Attachment
 from discord.ext import commands
 from discord.ext.commands import Context
 
 from image import manipulator
+from image.manipulator import draw_field_outlines
 from image.template import TemplateManager
+from image.types import Template
 from util import random_string_generator, send_moderator_info, delete_template, remove_templates_from_index, is_ascii
 
 
@@ -28,6 +30,38 @@ class BotMain(commands.Cog):
     async def on_ready(self):
         print(f"✅ Logged in as {self.bot.user}")
 
+    @commands.command()
+    async def intro(self, ctx: Context):
+        embed1 = discord.Embed(title="Thanks for adding me!")
+
+        embed1.description = "Hello, everyone!" + "\n"
+        embed1.description += "IMbot (**i**mage **m**anipulation bot) is a versatile meme creation bot for discord which allows you to create and use image templates for creating memes on the fly." + "\n" + "\n"
+        embed1.description += "There are two 'spaces' where templates are stored:" + "\n" + "\n"
+        embed1.description += "**The public space**" + "\n"
+        embed1.description += "Meme templates that are in the public space can be used by everyone, no matter which server they're on. You can submit suggestions for the public space." + "\n" + "\n"
+        embed1.description += "**The guild space**" + "\n"
+        embed1.description += "Since you can create custom templates, and the available meme names are limited if shared between servers, there is a second space which is for your guild (server) only. You can add your own templates, without having to adhere to a naming scheme or running out of available names. These templates are only visible to your guild." + "\n" + "\n"
+
+        embed2 = discord.Embed(title="How to add templates")
+        embed2.description = "**Add to your guild space** (instant)" + "\n"
+        embed2.description += "• Go to https://imbot.realmayus.xyz to open a designer application which allows you to create the template." + "\n"
+        embed2.description += "• Select your base image for the template" + "\n"
+        embed2.description += "• Add fields and arrange them" + "\n"
+        embed2.description += "• Download the template file (click on 'Serialize')" + "\n"
+        embed2.description += "• Go to discord, attach the file *and* enter this command:\n  `.t add <name>`" + "\n" + "\n"
+        embed2.description += "[**Submit suggestions for the public space**](https://imbot.realmayus.xyz/submit-public) (this takes time to verify)" + "\n"
+
+        embed3 = discord.Embed(title="How to create memes based on a template")
+        embed3.description = "**Add to your guild space** (instant)" + "\n"
+
+        await ctx.send(embed=embed1)
+        await ctx.send(embed=embed2)
+        await ctx.send(embed=embed3)
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, ctx: Context):
+        await self.intro(ctx)
+
     async def list_templates(self, ctx: Context):
         await ctx.send(embed=discord.Embed(title=f"{len(self.template_manager.templates)} templates loaded", description="\n".join([f"• {t.name}" for t in self.template_manager.templates])))
 
@@ -36,7 +70,6 @@ class BotMain(commands.Cog):
         await ctx.send("✅ Done!")
 
     async def add_template(self, ctx: Context, name: str):
-
         if len(ctx.message.attachments) != 1:
             await ctx.send("❌ Please attach exactly one template file.")
 
@@ -92,10 +125,12 @@ class BotMain(commands.Cog):
             c.write(json.dumps(json_, indent=2))
 
         b.seek(0)
-        await send_moderator_info(self.moderators, self.bot, ctx.author, b, ext, self.template_manager.parse_template(json_templ))
+        templ = self.template_manager.parse_template(json_templ)
+        await send_moderator_info(self.moderators, self.bot, ctx.author, self.highlight(templ), templ)
         await ctx.send("✅  Thanks for your submission. A moderator will review it and we'll notify you.")
 
-    async def cleanup(self, ctx: Context):
+    @staticmethod
+    async def cleanup(ctx: Context):
         remove_from_index = []  # list of names to remove from index.json
         cleanup_count = 0
         with open("assets/templates/index.json") as c:
@@ -137,11 +172,14 @@ class BotMain(commands.Cog):
                 for i in range(len(template.fields["text"])):
                     im = manipulator.add_text(im, template.fields["text"][i], f"Field #{i}")
             else:
-                if 1 < len(template.fields["text"]) != text.count(';') + 1:
+                if len(template.fields["text"]) < text.count(';') + 1:
                     await ctx.send(f"😕 This template has {len(template.fields['text'])} fields. Make sure to separate the lines by using semicolons (;)!")
                     return
                 im = Image.open(f)
                 for i, line in enumerate(lines):
+                    line = line.strip()
+                    if line == "_":
+                        continue
                     print(i, line)
                     im = manipulator.add_text(im, template.fields["text"][i], line.strip())
             im = im.convert('RGB')
@@ -202,12 +240,25 @@ class BotMain(commands.Cog):
         self.template_manager.load_templates()
         await ctx.message.add_reaction("✅")
 
+    def highlight(self, template: Template) -> discord.File:
+        with open(f"./assets/templates/images/{template.file}", "rb") as f:
+            arr = io.BytesIO()
+            print(template.fields["text"])
+            im = Image.open(f)
+            im = im.convert('RGB')
+            im = draw_field_outlines(im, template)
+            for i in range(len(template.fields["text"])):
+                im = manipulator.add_text(im, template.fields["text"][i], f"Field #{i}")
+            im.save(arr, format='JPEG')
+            arr.seek(0)
+        return discord.File(arr, filename=f"image.jpg")
+
 
     @commands.command(aliases=["temp", "t", "tl"])
     async def template(self, ctx, mode=None, *args):
         """Unified command that lets you add, accept, decline, reload, cleanup, list and rename templates."""
 
-        if mode not in ["add", "list", "accept", "decline", "delete", "remove", "reload", "cleanup", "search", "rename"]:
+        if mode not in ["add", "list", "accept", "decline", "delete", "remove", "reload", "cleanup", "search", "rename", "highlight"]:
             await ctx.send("❌ This subcommand doesn't exist. See the help for all subcommands.")
             return
 
@@ -220,6 +271,8 @@ class BotMain(commands.Cog):
             await self.list_templates(ctx)
         elif mode == "search":
             self.template_manager.search_template(args[0])
+        elif mode == "highlight":
+            await ctx.send(file=self.highlight(self.template_manager.find_template(args[0])))
         else:
             if ctx.author.id not in self.moderators:
                 await ctx.send("❌ You don't have permission to execute this command.")

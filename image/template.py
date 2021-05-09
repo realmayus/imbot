@@ -27,7 +27,9 @@ class TemplateManager:
                                     align=f["textProps"]["align"],
                                     color=f["textProps"]["color"],
                                     font_size=f["textProps"]["fontSize"],
-                                    bold=f["textProps"]["bold"]
+                                    bold=f["textProps"]["bold"],
+                                    outlinePercentage=f["shadowProps"]["percentage"] if f["shadowProps"]["enabled"] else 0,
+                                    outlineColor=f["shadowProps"]["color"],
                                 ) for f in data["fields"]],
                             "images": [],
                         })

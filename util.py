@@ -5,8 +5,8 @@ import random
 import string
 
 import discord
-from PIL import Image
 from discord import User
+from PIL import Image
 
 from image.manipulator import draw_field_outlines
 from image.types import Template
@@ -25,7 +25,7 @@ def is_ascii(s: str):
         return True
 
 
-async def send_moderator_info(moderators, bot, submitter, b, ext, template: Template):
+async def send_moderator_info(moderators, bot, submitter, file, template: Template):
     for mod in moderators:
         mod_user: User = bot.get_user(mod)
         embed = discord.Embed(title=f"{submitter} has submitted a new template")
@@ -36,14 +36,8 @@ async def send_moderator_info(moderators, bot, submitter, b, ext, template: Temp
         embed.add_field(name="User", value=f"{submitter} • {str(submitter.id)}", inline=False)
         embed.description = f"Use `.t accept {template.name}` to accept this template.\n\n"
         embed.description += f"Use `.t decline {template.name}` to decline this template."
-        new_b = io.BytesIO()
-        preview: Image = Image.open(b)
-        preview = draw_field_outlines(preview, template)
-        preview = preview.convert("RGB")
-        preview.save(new_b, format='JPEG')
-        new_b.seek(0)
 
-        await mod_user.send(file=discord.File(new_b, filename=f"image.jpg"), embed=embed)
+        await mod_user.send(file=file, embed=embed)
 
 
 def delete_template(file):

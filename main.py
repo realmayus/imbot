@@ -1,5 +1,6 @@
 import os.path
 from configparser import ConfigParser
+
 import discord
 from discord.ext.commands import Bot
 from bot.bot import BotMain
@@ -21,8 +22,8 @@ if not os.path.isdir("assets"):
     os.mkdir("assets/templates/images")
     print("ℹ️️  Created asset directories")
 
-if not os.path.isfile("assets/fonts/NotoSans-Regular.ttf"):
-    print("➡️  Please download NotoSans-Regular.ttf and place it in assets/fonts/")
+if not os.path.isfile("assets/fonts/NotoSans-Regular.ttf") and not os.path.isfile("assets/fonts/NotoSans-Bold.ttf"):
+    print("➡️  Please download NotoSans-Regular.ttf and NotoSans-Bold.ttf and place them in assets/fonts/")
     exit(1)
 
 
@@ -41,7 +42,7 @@ template_manager = TemplateManager()
 template_manager.load_templates()
 
 print("⏳ Logging in…")
-bot = Bot(command_prefix=".", intents=discord.Intents.all())
+bot = Bot(command_prefix=".")
 
 bot.add_cog(BotMain(bot, template_manager))
 bot.run(token)
