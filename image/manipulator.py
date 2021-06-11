@@ -22,11 +22,11 @@ def add_text(im: Image, field: TextField, text: str) -> Image:
         _, line_height = font.getsize(line)
 
         if Align(field.align) is Align.CENTER:
-            draw_center_text(line, draw, font, field.width, field.posX, field.posY + off_y, convert_hex(field.color), field.outlinePercentage, field.outlineColor, fontsize)
+            draw_center_text(line, draw, font, field.width, field.posX, field.posY + off_y, convert_hex(field.color), int(field.outlinePercentage), field.outlineColor, fontsize)
         elif Align(field.align) is Align.LEFT:
-            draw.text((field.posX, field.posY + off_y), line, (0, 0, 0), font, stroke_width=round(field.outlinePercentage * 0.01 * fontsize), stroke_fill=field.outlineColor)
+            draw.text((field.posX, field.posY + off_y), line, (0, 0, 0), font, stroke_width=round(int(field.outlinePercentage) * 0.01 * fontsize), stroke_fill=field.outlineColor)
         elif Align(field.align) is Align.RIGHT:
-            draw_right_text(line, draw, font, field.width, field.posX, field.posY + off_y, convert_hex(field.color), field.outlinePercentage, field.outlineColor, fontsize)
+            draw_right_text(line, draw, font, field.width, field.posX, field.posY + off_y, convert_hex(field.color), int(field.outlinePercentage), field.outlineColor, fontsize)
         off_y += line_height
     return im
 
